@@ -204,7 +204,9 @@ function Task
         [Parameter(Position=9,Mandatory=0)][string]$description = $null,
         [Parameter(Position=10,Mandatory=0)][string]$alias = $null,
         [Parameter(Position=11,Mandatory=0)][string]$maxRetries = 0,
-        [Parameter(Position=12,Mandatory=0)][string]$retryTriggerErrorPattern = $null
+        [Parameter(Position=12,Mandatory=0)][string]$retryTriggerErrorPattern = $null,
+        [Parameter(Position=13,Mandatory=0)][switch]$override = $false,
+		[Parameter(Position=14,Mandatory=0)][switch]$ifnotdefined = $false
     )
     if ($name -eq 'default') {
         Assert (!$action) ($msgs.error_default_task_cannot_have_action)
@@ -230,19 +232,27 @@ function Task
     $taskKey = $name.ToLower()
 
     $currentContext = $psake.context.Peek()
+	
+	Assert (!$override -or !$ifnotdefined) "can not combine -Override and -IfNotDefined"
+	
+	if (!$override -and !$ifnotdefined) {
+		Assert (!$currentContext.tasks.ContainsKey($taskKey)) ($msgs.error_duplicate_task_name -f $name)
+	}
+	
+	if ($currentContext.tasks.$taskKey -and $ifnotdefined) {
+		WriteColoredOutput ("Skipping definition of task '{0}' because already defined" -f $name) -foregroundcolor Cyan
+	} else {
+		$currentContext.tasks.$taskKey = $newTask
+		
+		if($alias)
+		{
+			$aliasKey = $alias.ToLower()
 
-    Assert (!$currentContext.tasks.ContainsKey($taskKey)) ($msgs.error_duplicate_task_name -f $name)
+			Assert (!$currentContext.aliases.ContainsKey($aliasKey)) ($msgs.error_duplicate_alias_name -f $alias)
 
-    $currentContext.tasks.$taskKey = $newTask
-
-    if($alias)
-    {
-        $aliasKey = $alias.ToLower()
-
-        Assert (!$currentContext.aliases.ContainsKey($aliasKey)) ($msgs.error_duplicate_alias_name -f $alias)
-
-        $currentContext.aliases.$aliasKey = $newTask
-    }
+			$currentContext.aliases.$aliasKey = $newTask
+		}
+	}
 }
 
 # .ExternalHelp  psake.psm1-help.xml
@@ -349,6 +359,8 @@ function Invoke-psake {
 
         LoadConfiguration $psake.build_script_dir
 
+		
+		
         LoadModules
 
         $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()

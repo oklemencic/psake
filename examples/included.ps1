@@ -1,0 +1,1 @@
+Properties {	$x = 100}Task IncludedCheck1{	"Nested check 1"	Assert ($x -eq 100) '$x was not 100' }Task Clean -IfNotDefined {	"this is the included clean"}
