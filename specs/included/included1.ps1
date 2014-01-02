@@ -1,0 +1,1 @@
+Task InitX -IfNotDefined {	$psake.x = 80	}Task InitY -IfNotDefined {	$psake.y = 80}

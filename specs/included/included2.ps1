@@ -1,0 +1,1 @@
+Task InitX {	$psake.x = 80	}Task InitY {	$psake.y = 80}
