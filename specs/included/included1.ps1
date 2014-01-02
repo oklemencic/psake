@@ -1,0 +1,1 @@
+Task InitX -IfNotDefined {	$global:x = 80	}Task InitY -IfNotDefined {	$global:y = 80}
